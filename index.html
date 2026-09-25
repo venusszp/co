@@ -1,0 +1,3164 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Колесо Фортуны — Современный рандомайзер</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-page: #0b0f19;
+            --bg-card: rgba(22, 30, 49, 0.85);
+            --bg-card-border: rgba(255, 255, 255, 0.1);
+            --bg-card-subtle: rgba(15, 23, 42, 0.7);
+            --text-main: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-primary: #6366f1;
+            --accent-primary-hover: #4f46e5;
+            --accent-glow: rgba(99, 102, 241, 0.4);
+            --accent-success: #10b981;
+            --accent-danger: #ef4444;
+            --accent-warning: #f59e0b;
+            --pointer-color: #ef4444;
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-display: 'Outfit', sans-serif;
+            --shadow-elevation: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+        }
+
+        [data-theme="light"] {
+            --bg-page: #f1f5f9;
+            --bg-card: rgba(255, 255, 255, 0.92);
+            --bg-card-border: rgba(0, 0, 0, 0.08);
+            --bg-card-subtle: #f8fafc;
+            --text-main: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent-primary: #4f46e5;
+            --accent-primary-hover: #4338ca;
+            --accent-glow: rgba(79, 70, 229, 0.25);
+            --pointer-color: #dc2626;
+            --shadow-elevation: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Ambient glowing background */
+        .ambient-glow {
+            position: fixed;
+            top: 15%;
+            left: 25%;
+            width: 550px;
+            height: 550px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            filter: blur(90px);
+            opacity: 0.45;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Custom Modern Toolbar */
+        .custom-toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--bg-card-border);
+            padding: 10px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-main);
+            flex-shrink: 0;
+        }
+
+        .brand-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        .brand-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        .brand h1 {
+            font-family: var(--font-display);
+            font-size: 19px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--text-main), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Toolbar Right Actions */
+        .toolbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .btn-icon {
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--bg-card-border);
+            color: var(--text-secondary);
+            border-radius: var(--radius-sm);
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-icon:hover {
+            color: var(--text-main);
+            border-color: var(--accent-primary);
+            background: var(--bg-card);
+            transform: translateY(-1px);
+        }
+
+        .btn-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .btn-help-icon {
+            font-weight: 800;
+            font-size: 16px;
+            color: var(--accent-primary);
+            border-color: rgba(99, 102, 241, 0.3);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .btn-help-icon:hover {
+            background: var(--accent-primary);
+            color: #ffffff;
+            border-color: var(--accent-primary);
+        }
+
+        /* Main Workspace Layout */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 28px;
+            flex: 1;
+            align-items: start;
+        }
+
+        /* Wheel Area Stage */
+        .wheel-stage {
+            background: var(--bg-card);
+            border: 1px solid var(--bg-card-border);
+            border-radius: var(--radius-lg);
+            padding: 28px 20px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: var(--shadow-elevation);
+            position: relative;
+            min-height: 600px;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: min(520px, 86vw);
+            height: min(520px, 86vw);
+            margin: 18px 0 26px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #wheel-canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.35), 0 0 40px rgba(99, 102, 241, 0.15);
+            transition: filter 0.3s ease;
+            cursor: pointer;
+        }
+
+        /* Top Needle Pointer with Realistic Physics Pivot */
+        .ticker-pointer {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 30;
+            width: 40px;
+            height: 54px;
+            pointer-events: none;
+            filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+            transform-origin: 50% 12px;
+            transition: transform 0.05s ease-out;
+        }
+
+        .ticker-pointer svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Center Hub Trigger Button - FIXED OVERFLOW */
+        .center-hub {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 4px solid #ffffff;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            cursor: pointer;
+            z-index: 25;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            user-select: none;
+            padding: 4px;
+            box-sizing: border-box;
+        }
+
+        .center-hub:hover {
+            transform: translate(-50%, -50%) scale(1.06);
+            box-shadow: 0 6px 22px var(--accent-glow), inset 0 2px 8px rgba(255,255,255,0.5);
+        }
+
+        .center-hub:active {
+            transform: translate(-50%, -50%) scale(0.95);
+        }
+
+        .center-hub svg {
+            width: 20px;
+            height: 20px;
+            fill: #ffffff;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+            transition: transform 0.3s ease;
+        }
+
+        .center-hub:hover svg {
+            transform: rotate(45deg);
+        }
+
+        .center-hub span {
+            font-family: var(--font-display);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            color: #ffffff;
+            text-transform: uppercase;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 76px;
+            text-align: center;
+            line-height: 1;
+        }
+
+        /* Bottom Wheel Control Buttons */
+        .wheel-actions {
+            display: flex;
+            gap: 14px;
+            width: 100%;
+            max-width: 440px;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            flex: 2;
+            background: linear-gradient(135deg, var(--accent-primary), #818cf8);
+            color: #ffffff;
+            border: none;
+            padding: 14px 24px;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px var(--accent-glow);
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--accent-glow);
+            filter: brightness(1.08);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            background: var(--bg-card-subtle);
+            color: var(--text-secondary);
+            border: 1px solid var(--bg-card-border);
+            padding: 14px 18px;
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--bg-card);
+            color: var(--text-main);
+            border-color: var(--accent-primary);
+        }
+
+        .key-hint {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.15);
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        /* Sidebar Panels & Tabs */
+        .sidebar {
+            background: var(--bg-card);
+            border: 1px solid var(--bg-card-border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--shadow-elevation);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .tabs-header {
+            display: flex;
+            background: var(--bg-card-subtle);
+            padding: 4px;
+            border-radius: var(--radius-sm);
+            gap: 4px;
+            border: 1px solid var(--bg-card-border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 13px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .tab-btn.active {
+            background: var(--bg-card);
+            color: var(--text-main);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .tab-content {
+            display: none;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* Editor Section */
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stats-badge {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--bg-card-subtle);
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--bg-card-border);
+        }
+
+        .stats-badge span {
+            color: var(--accent-primary);
+            font-weight: 700;
+        }
+
+        .editor-tools {
+            display: flex;
+            gap: 6px;
+        }
+
+        .tool-btn {
+            padding: 5px 9px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--bg-card-border);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+        }
+
+        .tool-btn:hover {
+            color: var(--text-main);
+            border-color: var(--accent-primary);
+        }
+
+        .textarea-wrapper {
+            position: relative;
+        }
+
+        #prize-input {
+            width: 100%;
+            height: 250px;
+            padding: 14px;
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--bg-card-border);
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #prize-input:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .editor-tip {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Presets quick tags */
+        .preset-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .preset-pill {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 14px;
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--bg-card-border);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .preset-pill:hover {
+            border-color: var(--accent-primary);
+            color: var(--text-main);
+            background: var(--bg-card);
+            transform: translateY(-1px);
+        }
+
+        /* History List */
+        .history-list {
+            max-height: 320px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 4px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--bg-card-border);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .history-item .winner-name {
+            font-weight: 600;
+            color: var(--text-main);
+            max-width: 220px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-item .winner-time {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* Settings Tab with Custom Switches */
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .setting-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .select-input, .range-slider {
+            width: 100%;
+            padding: 8px 12px;
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--bg-card-border);
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+        }
+
+        .select-input:focus {
+            border-color: var(--accent-primary);
+        }
+
+        /* Custom Sound & Feature Toggles */
+        .custom-toggle-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--bg-card-border);
+            border-radius: var(--radius-sm);
+            transition: border-color 0.2s ease;
+        }
+
+        .custom-toggle-card:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        .toggle-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .toggle-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toggle-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Modern Sleek Toggle Switch */
+        .custom-switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+
+        .custom-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--bg-card-border);
+            transition: .25s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 26px;
+        }
+
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #94a3b8;
+            transition: .25s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        input:checked + .switch-slider {
+            background: linear-gradient(135deg, var(--accent-primary), #818cf8);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        input:checked + .switch-slider:before {
+            transform: translateX(22px);
+            background-color: #ffffff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+
+        /* Winner Celebration Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--bg-card-border);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 480px;
+            padding: 32px 28px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 50px var(--accent-glow);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .modal-overlay.show .modal-card {
+            transform: scale(1);
+        }
+
+        .winner-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(245, 158, 11, 0.2));
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            color: #fbbf24;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        .winner-title {
+            font-family: var(--font-display);
+            font-size: 34px;
+            font-weight: 800;
+            line-height: 1.2;
+            word-break: break-word;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(99, 102, 241, 0.5);
+        }
+
+        [data-theme="light"] .winner-title {
+            background: linear-gradient(135deg, #1e1b4b, #4338ca);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .modal-btn-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            padding: 12px 18px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn-primary {
+            background: var(--accent-primary);
+            color: white;
+            flex: 1;
+        }
+
+        .modal-btn-primary:hover {
+            background: var(--accent-primary-hover);
+        }
+
+        .modal-btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #f87171;
+            flex: 1.2;
+            font-weight: 700;
+        }
+
+        .modal-btn-danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .modal-btn-secondary {
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--bg-card-border);
+            color: var(--text-secondary);
+        }
+
+        .modal-btn-secondary:hover {
+            color: var(--text-main);
+            background: var(--bg-card);
+        }
+
+        .modal-close-icon {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 22px;
+            line-height: 1;
+            padding: 4px;
+        }
+
+        .modal-close-icon:hover {
+            color: var(--text-main);
+        }
+
+        /* Hotkeys Modal Specifics */
+        .hotkeys-card {
+            max-width: 520px;
+            text-align: left;
+        }
+
+        .hotkeys-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .hotkeys-header h3 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .hotkeys-grid-popup {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .hotkey-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--bg-card-border);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+        }
+
+        .hotkey-row kbd {
+            background: var(--bg-card);
+            border: 1px solid var(--bg-card-border);
+            border-radius: 4px;
+            padding: 3px 7px;
+            font-family: monospace;
+            font-weight: 700;
+            font-size: 12px;
+            color: var(--accent-primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        /* Fullscreen Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 99;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    
+        /* --- Winner Modal 5s Auto-Close Indicator --- */
+        .autoclose-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin: 18px 0 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .autoclose-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), #ec4899);
+            border-radius: 4px;
+            transition: width 0.05s linear;
+        }
+
+        .autoclose-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        /* --- Bottom-Right Last Winner Floating Widget --- */
+        .last-winner-widget {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 45;
+            background: var(--bg-card);
+            border: 1px solid var(--bg-card-border);
+            border-radius: var(--radius-md);
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(99, 102, 241, 0.15);
+            backdrop-filter: blur(14px);
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            max-width: 320px;
+            user-select: none;
+        }
+
+        .last-winner-widget:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 14px 35px rgba(0, 0, 0, 0.6), 0 0 25px var(--accent-glow);
+        }
+
+        .widget-icon {
+            font-size: 26px;
+            flex-shrink: 0;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+        }
+
+        .widget-body {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+        }
+
+        .widget-label {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+        }
+
+        .widget-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .widget-time {
+            font-size: 11px;
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        /* --- Admin Login & Control Modals --- */
+        .admin-login-card {
+            max-width: 420px;
+            text-align: left;
+        }
+
+        .admin-badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .admin-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .admin-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .admin-form {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .admin-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .admin-input-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .admin-input-group input, .admin-text-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--bg-card-border);
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .admin-input-group input:focus, .admin-text-input:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .admin-error-msg {
+            color: #ef4444;
+            font-size: 12px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .admin-panel-card {
+            max-width: 620px;
+            text-align: left;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .admin-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--bg-card-border);
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+
+        .admin-header-left h2 {
+            font-size: 22px;
+            font-weight: 800;
+            margin-top: 4px;
+        }
+
+        .admin-chip {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 3px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+        }
+
+        .firebase-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--bg-card-border);
+            border-radius: 20px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        .admin-section {
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--bg-card-border);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            margin-bottom: 18px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+            line-height: 1.4;
+        }
+
+        .admin-rig-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .quick-sectors-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .quick-sector-btn {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--bg-card-border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .quick-sector-btn:hover {
+            border-color: var(--accent-primary);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .rig-status-card {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--bg-card-border);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .rig-status-card.active {
+            border-color: rgba(245, 158, 11, 0.4);
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .rig-status-text {
+            flex: 1;
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .btn-clear-rig {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #f87171;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .banned-tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 38px;
+            align-items: center;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: var(--radius-sm);
+            border: 1px dashed var(--bg-card-border);
+        }
+
+        .banned-tag {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(239, 68, 68, 0.18);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .banned-tag-remove {
+            cursor: pointer;
+            color: #f87171;
+            font-weight: 800;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .banned-tag-remove:hover {
+            color: #ffffff;
+        }
+
+        .admin-panel-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--bg-card-border);
+        }
+
+    
+        /* Mobile & Responsive Optimization */
+        @media (max-width: 1080px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 680px) {
+            .custom-toolbar {
+                padding: 8px 12px;
+                gap: 8px;
+            }
+            .brand {
+                gap: 8px;
+            }
+            .brand h1 {
+                font-size: 15px;
+            }
+            .brand-icon {
+                width: 28px;
+                height: 28px;
+                border-radius: 8px;
+            }
+            .brand-icon svg {
+                width: 16px;
+                height: 16px;
+            }
+            .toolbar-actions {
+                gap: 4px;
+            }
+            .btn-icon {
+                width: 32px;
+                height: 32px;
+            }
+            .btn-icon svg {
+                width: 15px;
+                height: 15px;
+            }
+            .container {
+                padding: 10px 8px 84px;
+                gap: 14px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .wheel-stage {
+                padding: 14px 6px;
+                min-height: auto;
+                width: 100%;
+                box-sizing: border-box;
+                overflow: hidden;
+            }
+            .wheel-container {
+                width: min(290px, 80vw);
+                height: min(290px, 80vw);
+                margin: 6px auto 14px;
+            }
+            .center-hub {
+                width: 64px;
+                height: 64px;
+            }
+            .center-hub svg {
+                width: 16px;
+                height: 16px;
+            }
+            .center-hub span {
+                font-size: 9px;
+                max-width: 56px;
+            }
+            .ticker-pointer {
+                width: 28px;
+                height: 40px;
+                top: -8px;
+            }
+            .wheel-actions {
+                max-width: 290px;
+                margin: 0 auto;
+                gap: 8px;
+                width: 100%;
+            }
+            .btn-primary, .btn-secondary {
+                padding: 10px 14px;
+                font-size: 13px;
+            }
+            .sidebar {
+                padding: 14px 12px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .last-winner-widget {
+                bottom: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+                padding: 8px 12px;
+                gap: 8px;
+                border-radius: 12px;
+            }
+            .widget-icon {
+                font-size: 20px;
+            }
+            .widget-name {
+                font-size: 13px;
+            }
+            .modal-overlay {
+                padding: 10px;
+            }
+            .modal-card {
+                padding: 22px 14px;
+                max-height: 90vh;
+                overflow-y: auto;
+                border-radius: 16px;
+            }
+            .admin-panel-card {
+                padding: 18px 12px;
+                max-height: 90vh;
+            }
+            .admin-section {
+                padding: 12px 10px;
+            }
+            .admin-rig-row {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .admin-rig-row button {
+                width: 100%;
+            }
+            .admin-panel-footer {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .admin-panel-footer button {
+                width: 100%;
+            }
+        }
+    </style>
+
+    <!-- Firebase SDK Compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+</head>
+<body data-theme="dark">
+    <div class="ambient-glow"></div>
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Custom Modern Toolbar -->
+    <header class="custom-toolbar">
+        <a href="#" class="brand" id="brand-title" title="Тройной клик для входа в панель Venus">
+            <div class="brand-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            </div>
+            <h1>Колесо Фортуны</h1>
+        </a>
+
+        <!-- Toolbar Right Actions -->
+        <div class="toolbar-actions">
+            <!-- Question mark button to show hotkeys -->
+            <button class="btn-icon btn-help-icon" id="btn-open-hotkeys" title="Горячие клавиши (?)">?</button>
+            
+            <button class="btn-icon" id="btn-sound-toggle" title="Вкл/выкл звук (M)">
+                <svg id="icon-sound-on" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                <svg id="icon-sound-off" style="display:none;" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+            </button>
+            <button class="btn-icon" id="btn-theme-toggle" title="Переключить тему">
+                <svg id="icon-theme-dark" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+                <svg id="icon-theme-light" style="display:none;" viewBox="0 0 24 24"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+            </button>
+            <button class="btn-icon" id="btn-fullscreen" title="Во весь экран (F)">
+                <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="container">
+        <!-- Left: Interactive Wheel Stage -->
+        <section class="wheel-stage">
+            
+            <div class="wheel-container">
+                <!-- Physics Ticker Pointer -->
+                <div class="ticker-pointer" id="ticker-pointer">
+                    <svg viewBox="0 0 40 54">
+                        <defs>
+                            <linearGradient id="ptrGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#ff4d4d"/>
+                                <stop offset="100%" stop-color="#b71c1c"/>
+                            </linearGradient>
+                            <filter id="pinShadow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.5)"/>
+                            </filter>
+                        </defs>
+                        <!-- Stylized needle pointer -->
+                        <polygon points="20,50 5,14 20,4 35,14" fill="url(#ptrGrad)" stroke="#ffffff" stroke-width="2"/>
+                        <!-- Pivot ring -->
+                        <circle cx="20" cy="14" r="6" fill="#ffffff" filter="url(#pinShadow)"/>
+                        <circle cx="20" cy="14" r="3" fill="#222222"/>
+                    </svg>
+                </div>
+
+                <canvas id="wheel-canvas"></canvas>
+
+                <!-- Center Hub Trigger Button (Fixed Dimensions & Overflow) -->
+                <div class="center-hub" id="center-hub" title="Кликните, чтобы крутить!">
+                    <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+                    <span>КРУТИТЬ</span>
+                </div>
+            </div>
+
+            <!-- Wheel Bottom Controls -->
+            <div class="wheel-actions">
+                <button class="btn-primary" id="btn-spin">
+                    <span>Крутить колесо</span>
+                    <span class="key-hint">Space</span>
+                </button>
+                <button class="btn-secondary" id="btn-shuffle" title="Перемешать список вариантов (R)">
+                    <span>🔀 Микс</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Right: Control Center Sidebar -->
+        <aside class="sidebar">
+            <div class="tabs-header">
+                <button class="tab-btn active" data-tab="tab-items">
+                    <span>Варианты</span>
+                </button>
+                <button class="tab-btn" data-tab="tab-history">
+                    <span>Победы</span>
+                </button>
+                <button class="tab-btn" data-tab="tab-settings">
+                    <span>Настройки</span>
+                </button>
+            </div>
+
+            <!-- Tab 1: Items Editor -->
+            <div class="tab-content active" id="tab-items">
+                <div class="editor-header">
+                    <div class="stats-badge">
+                        Секторов: <span id="stat-active">0</span> / <span id="stat-total">0</span>
+                    </div>
+                    <div class="editor-tools">
+                        <button class="tool-btn" id="btn-sort-az" title="Сортировка по алфавиту">A-Z</button>
+                        <button class="tool-btn" id="btn-clear-list" title="Очистить всё">🗑️ Очистить</button>
+                    </div>
+                </div>
+
+                <div class="textarea-wrapper">
+                    <textarea id="prize-input" spellcheck="false" placeholder="Введите по одному варианту на строку...">30 задач
+0 задач
+Отдых
+Фильм
+Кофе-брейк
+Прогулка</textarea>
+                </div>
+
+                <div class="editor-tip">
+                    <span>💡 Точка в конце строки (<code>.</code>) временно выключает вариант.</span>
+                </div>
+
+                <!-- Presets: Only Yes/No and 1-21 -->
+                <div class="preset-row">
+                    <span style="font-size: 11px; color: var(--text-muted);">Пресеты:</span>
+                    <button class="preset-pill" data-preset="yesno">Да / Нет</button>
+                    <button class="preset-pill" data-preset="numbers21">1 — 21</button>
+                </div>
+            </div>
+
+            <!-- Tab 2: History -->
+            <div class="tab-content" id="tab-history">
+                <div class="editor-header">
+                    <span class="stats-badge">История результатов</span>
+                    <button class="tool-btn" id="btn-clear-history">Очистить историю</button>
+                </div>
+                <div class="history-list" id="history-list">
+                    <div class="empty-history">История пока пуста. Крутите колесо!</div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Settings with Custom Switches -->
+            <div class="tab-content" id="tab-settings">
+                <div class="setting-group">
+                    <div class="setting-label">
+                        <span>Время вращения</span>
+                        <span id="spin-duration-val">6 сек</span>
+                    </div>
+                    <input type="range" class="range-slider" id="setting-duration" min="2" max="15" value="6" step="1">
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label">Палитра секторов</label>
+                    <select class="select-input" id="setting-palette">
+                        <option value="modern">🎨 Современный неон</option>
+                        <option value="pastel">🍬 Пастельная гамма</option>
+                        <option value="rainbow">🌈 Яркая радуга</option>
+                        <option value="gold">👑 Королевское золото</option>
+                        <option value="ocean">🌊 Океанский бриз</option>
+                    </select>
+                </div>
+
+                <!-- Custom Sound Toggles -->
+                <div class="custom-toggle-card">
+                    <div class="toggle-info">
+                        <span class="toggle-title">🎯 Щелчки трещотки</span>
+                        <span class="toggle-desc">Звук перещёлкивания штифтов</span>
+                    </div>
+                    <label class="custom-switch">
+                        <input type="checkbox" id="setting-sound-ticks" checked>
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+
+                <div class="custom-toggle-card">
+                    <div class="toggle-info">
+                        <span class="toggle-title">🎺 Победные фанфары</span>
+                        <span class="toggle-desc">Торжественный аккорд при выпадении</span>
+                    </div>
+                    <label class="custom-switch">
+                        <input type="checkbox" id="setting-sound-fanfare" checked>
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+
+                <div class="custom-toggle-card">
+                    <div class="toggle-info">
+                        <span class="toggle-title">🗑️ Авто-удаление</span>
+                        <span class="toggle-desc">Скрывать победителя из списка сразу</span>
+                    </div>
+                    <label class="custom-switch">
+                        <input type="checkbox" id="setting-auto-remove">
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+
+                <div class="custom-toggle-card">
+                    <div class="toggle-info">
+                        <span class="toggle-title">🎉 Конфетти</span>
+                        <span class="toggle-desc">Салют при определении победителя</span>
+                    </div>
+                    <label class="custom-switch">
+                        <input type="checkbox" id="setting-confetti" checked>
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-group">
+                    <div class="setting-label">
+                        <span>Громкость эффектов</span>
+                        <span id="sound-vol-val">80%</span>
+                    </div>
+                    <input type="range" class="range-slider" id="setting-volume" min="0" max="100" value="80">
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Winner Celebration Modal (Updated with 'Убрать из списка') -->
+    <div class="modal-overlay" id="winner-modal">
+        <div class="modal-card">
+            <button class="modal-close-icon" id="modal-close-btn" title="Закрыть (Esc)">&times;</button>
+            <div class="winner-badge">🎉 Выпал сектор!</div>
+            <h2 class="winner-title" id="modal-winner-name">Победитель</h2>
+            
+            <!-- 5s Auto-Close Indicator -->
+            <div class="autoclose-container">
+                <div class="autoclose-bar" id="winner-autoclose-bar"></div>
+            </div>
+            <div class="autoclose-label" id="winner-autoclose-text">Закроется через 5 сек...</div>
+
+            <div class="modal-actions">
+                <div class="modal-btn-row">
+                    <button class="modal-btn modal-btn-danger" id="modal-btn-exclude" title="Убрать выпавший вариант из списка (S)">
+                        <span>🗑️ Убрать из списка (S)</span>
+                    </button>
+                    <button class="modal-btn modal-btn-primary" id="modal-btn-spin-again">
+                        <span>🔄 Ещё раз (Space)</span>
+                    </button>
+                </div>
+                <button class="modal-btn modal-btn-secondary" id="modal-btn-copy">
+                    <span>📋 Скопировать название</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hotkeys Help Modal (Opened via '?') -->
+    <div class="modal-overlay" id="hotkeys-modal">
+        <div class="modal-card hotkeys-card">
+            <button class="modal-close-icon" id="hotkeys-close-btn" title="Закрыть (Esc)">&times;</button>
+            <div class="hotkeys-header">
+                <div class="brand-icon" style="width:30px; height:30px;">⌨️</div>
+                <h3>Горячие клавиши</h3>
+            </div>
+            
+            <div class="hotkeys-grid-popup">
+                <div class="hotkey-row">
+                    <span>Крутить / Ещё раз</span>
+                    <kbd>Space</kbd>
+                </div>
+                <div class="hotkey-row">
+                    <span>Убрать из списка</span>
+                    <kbd>S</kbd>
+                </div>
+                <div class="hotkey-row">
+                    <span>Перемешать варианты</span>
+                    <kbd>R</kbd>
+                </div>
+                <div class="hotkey-row">
+                    <span>Фокус в редактор</span>
+                    <kbd>E</kbd>
+                </div>
+                <div class="hotkey-row">
+                    <span>Полный экран</span>
+                    <kbd>F</kbd>
+                </div>
+                <div class="hotkey-row">
+                    <span>Вкл / выкл звук</span>
+                    <kbd>M</kbd>
+                </div>
+                                <div class="hotkey-row">
+                    <span>Закрыть окно</span>
+                    <kbd>Esc / X</kbd>
+                </div>
+            </div>
+
+            <button class="modal-btn modal-btn-primary" id="hotkeys-got-it" style="width:100%;">
+                <span>Понятно</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- State Management ---
+            const state = {
+                items: [],
+                activeItems: [],
+                currentAngle: 0,
+                isSpinning: false,
+                isIdlePaused: false,
+                idleSpeed: 0.08,
+                lastWinner: null,
+                spinDuration: 6000,
+                intrigueLevel: 'high', // 'normal', 'medium', 'high'
+                autoRemoveWinner: false,
+                confettiEnabled: true,
+                soundEnabled: true,
+                soundTicks: true,
+                soundFanfare: true,
+                soundVolume: 0.8,
+                theme: 'dark',
+                palette: 'modern',
+                history: []
+            };
+            window.wheelState = state;
+
+            // --- Palettes Definition ---
+            const PALETTES = {
+                modern: ['#6366f1', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#14b8a6', '#f43f5e'],
+                pastel: ['#bbf7d0', '#fed7aa', '#bae6fd', '#fbcfe8', '#ddd6fe', '#fef08a', '#c7d2fe', '#fecdd3'],
+                rainbow: ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'],
+                gold: ['#fbbf24', '#d97706', '#fef3c7', '#b45309', '#fde68a', '#92400e', '#f59e0b'],
+                ocean: ['#0284c7', '#06b6d4', '#0ea5e9', '#38bdf8', '#0369a1', '#0891b2', '#7dd3fc']
+            };
+
+            // --- DOM Elements ---
+            const canvas = document.getElementById('wheel-canvas');
+            const ctx = canvas.getContext('2d');
+            const tickerPointer = document.getElementById('ticker-pointer');
+            const centerHub = document.getElementById('center-hub');
+            const btnSpin = document.getElementById('btn-spin');
+            const btnShuffle = document.getElementById('btn-shuffle');
+            const prizeInput = document.getElementById('prize-input');
+            const statActive = document.getElementById('stat-active');
+            const statTotal = document.getElementById('stat-total');
+            
+            // Modals
+            const winnerModal = document.getElementById('winner-modal');
+            const modalWinnerName = document.getElementById('modal-winner-name');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+            const modalBtnExclude = document.getElementById('modal-btn-exclude');
+            const modalBtnSpinAgain = document.getElementById('modal-btn-spin-again');
+            const modalBtnCopy = document.getElementById('modal-btn-copy');
+
+            const hotkeysModal = document.getElementById('hotkeys-modal');
+            const btnOpenHotkeys = document.getElementById('btn-open-hotkeys');
+            const hotkeysCloseBtn = document.getElementById('hotkeys-close-btn');
+            const hotkeysGotIt = document.getElementById('hotkeys-got-it');
+
+            // Lists & Tools
+            const historyList = document.getElementById('history-list');
+            const btnClearHistory = document.getElementById('btn-clear-history');
+            const btnSortAz = document.getElementById('btn-sort-az');
+            const btnClearList = document.getElementById('btn-clear-list');
+
+            // Toolbar & Actions
+            const btnSoundToggle = document.getElementById('btn-sound-toggle');
+            const iconSoundOn = document.getElementById('icon-sound-on');
+            const iconSoundOff = document.getElementById('icon-sound-off');
+            const btnThemeToggle = document.getElementById('btn-theme-toggle');
+            const iconThemeDark = document.getElementById('icon-theme-dark');
+            const iconThemeLight = document.getElementById('icon-theme-light');
+            const btnFullscreen = document.getElementById('btn-fullscreen');
+
+            // Settings
+            const settingDuration = document.getElementById('setting-duration');
+            const spinDurationVal = document.getElementById('spin-duration-val');
+            const settingPalette = document.getElementById('setting-palette');
+            const settingSoundTicks = document.getElementById('setting-sound-ticks');
+            const settingSoundFanfare = document.getElementById('setting-sound-fanfare');
+            const settingAutoRemove = document.getElementById('setting-auto-remove');
+            const settingConfetti = document.getElementById('setting-confetti');
+            const settingVolume = document.getElementById('setting-volume');
+            const soundVolVal = document.getElementById('sound-vol-val');
+
+            // --- Procedural Web Audio Engine with Master Dynamics Compressor ---
+            let audioCtx = null;
+            let masterCompressor = null;
+            let currentTickGain = null;
+            let lastAudioTickTime = 0;
+
+            function getAudioContext() {
+                if (!audioCtx) {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    audioCtx = new AudioContextClass();
+                    try {
+                        masterCompressor = audioCtx.createDynamicsCompressor();
+                        masterCompressor.threshold.setValueAtTime(-4, audioCtx.currentTime);
+                        masterCompressor.knee.setValueAtTime(6, audioCtx.currentTime);
+                        masterCompressor.ratio.setValueAtTime(10, audioCtx.currentTime);
+                        masterCompressor.attack.setValueAtTime(0.002, audioCtx.currentTime);
+                        masterCompressor.release.setValueAtTime(0.08, audioCtx.currentTime);
+                        masterCompressor.connect(audioCtx.destination);
+                    } catch(e) {}
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                return audioCtx;
+            }
+
+            // Base64 encoded 5b4c1a1aef7fffd.mp3
+            const TICK_MP3_DATA = "data:audio/mp3;base64,//tQxAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAFAAAE5AAzMzMzMzMzMzMzMzMzMzMzMzMzM2ZmZmZmZmZmZmZmZmZmZmZmZmZmmZmZmZmZmZmZmZmZmZmZmZmZmZnMzMzMzMzMzMzMzMzMzMzMzMzMzP////////////////////////8AAAA5TEFNRTMuOTcgAaUAAAAALCcAABRAJAduQgAAQAAABORlRsUIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/7UMQAAAlE3PYU84ABnSOsvx8iAydoXCOQnBOC4Oj/FsIQhETwGCJDAYDgsPjcbn///5//8wxphn888/0MPPP+Yee/570MMaeNCDsHAxEA0EAQKOKAh//UCEo7h/8TqYMYOQOYOwNAfDUaiwPAABdqxSF7bFtD6wLfwTr+vwC0ICy8iYlMZspF8v83NDM3JId4zIpbxcZw0Lh0rn2dvm5iRc3QXWm6aH7l8+aHC4ghMCfWff+ghYzNzdTJ21H//9v6VjGnY4oAAAACgCgQC2r/+1LEBIALqYd3uBUACXgobjcicAG0UkVi0ijj8f/T/uaf/o6f/HhUflSfz0fZWMdI8KmGKeecZqqZ5p5OeP3dv/76k54/ceCHKEn/2bX8gJRbFkL8nEWPgvBsCx//7//wQArA0FiRt6k4DZqXb91trCTAAAJRAAXYIyN0tGJ51qU0nycm9AAwiccbGqEUNRzFLGGDzqbbcs47NQ7/RUQkPTWq2ue8dEU5Rr9Tf7DokmjVirIc53p/6jY9I1NIlDSHztNv/FSwqgAGBgLBwPB4EP/7UsQEgAudbYO4FQAJdx8t94wwAhQGAgO+iWv389Pc0z+cMjR4n+IgG8eE5Wdv/NRxGGP/8LwEEFwAuDWCwS6LX++NwbCUaCDGQrCDFyslW//zjjVNKS7GH////5CFyLhFkhUgOw4KLoSyMuSORpOY4mWiYRwFk5J+1VWyqoCon+kKsbre1LqhRNzXolqVVQQYV/fP9UdfaLVUBLqmvVUvVQoCqgICrVV5xiyOgIkFZ7rDTRKDUFQCdEvyMq7UColBVxChP2UCgJmUyQ6EUIUM//tSxAUAC107P0ewYQFbnt3Aww4IiSJKn+9pc9sBAVIKArG4a6hQETSDNw8KJNVDCj2bWSk3wM12+dU1BAR9X8oezVmaGpBj2MqoYCbOkpfswE4mNSoCJ////z6RrLAI+GFOhJ/UBUdA+BqHRDJg/CCPJwvWL1BaEkciEV1j5hZh5QEfGltUVlllQz/NZZLP+yH/2Wyofy0pl/53+y2WOMKWQyMmCggdBAwTjAyKN1MdBYXDP//LC5n/FiQ9TEFNRTMuOTdVVVVVVVVVVVVVVVX/+1LECgPAAAGkAAAAIAAANIAAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==";
+            let tickAudioBuffer = null;
+            let tickAudioElementPool = [];
+            let tickAudioPoolIndex = 0;
+
+            // Pre-load audio buffer via Web Audio API & HTML5 Audio
+            function initTickAudio() {
+                try {
+                    // Pool of HTML5 Audio elements for instant mobile click response
+                    for (let i = 0; i < 8; i++) {
+                        const a = new Audio(TICK_MP3_DATA);
+                        a.preload = 'auto';
+                        tickAudioElementPool.push(a);
+                    }
+                } catch(e) {}
+
+                try {
+                    const actx = getAudioContext();
+                    const binaryString = atob("//tQxAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAFAAAE5AAzMzMzMzMzMzMzMzMzMzMzMzMzM2ZmZmZmZmZmZmZmZmZmZmZmZmZmmZmZmZmZmZmZmZmZmZmZmZmZmZnMzMzMzMzMzMzMzMzMzMzMzMzMzP////////////////////////8AAAA5TEFNRTMuOTcgAaUAAAAALCcAABRAJAduQgAAQAAABORlRsUIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/7UMQAAAlE3PYU84ABnSOsvx8iAydoXCOQnBOC4Oj/FsIQhETwGCJDAYDgsPjcbn///5//8wxphn888/0MPPP+Yee/570MMaeNCDsHAxEA0EAQKOKAh//UCEo7h/8TqYMYOQOYOwNAfDUaiwPAABdqxSF7bFtD6wLfwTr+vwC0ICy8iYlMZspF8v83NDM3JId4zIpbxcZw0Lh0rn2dvm5iRc3QXWm6aH7l8+aHC4ghMCfWff+ghYzNzdTJ21H//9v6VjGnY4oAAAACgCgQC2r/+1LEBIALqYd3uBUACXgobjcicAG0UkVi0ijj8f/T/uaf/o6f/HhUflSfz0fZWMdI8KmGKeecZqqZ5p5OeP3dv/76k54/ceCHKEn/2bX8gJRbFkL8nEWPgvBsCx//7//wQArA0FiRt6k4DZqXb91trCTAAAJRAAXYIyN0tGJ51qU0nycm9AAwiccbGqEUNRzFLGGDzqbbcs47NQ7/RUQkPTWq2ue8dEU5Rr9Tf7DokmjVirIc53p/6jY9I1NIlDSHztNv/FSwqgAGBgLBwPB4EP/7UsQEgAudbYO4FQAJdx8t94wwAhQGAgO+iWv389Pc0z+cMjR4n+IgG8eE5Wdv/NRxGGP/8LwEEFwAuDWCwS6LX++NwbCUaCDGQrCDFyslW//zjjVNKS7GH////5CFyLhFkhUgOw4KLoSyMuSORpOY4mWiYRwFk5J+1VWyqoCon+kKsbre1LqhRNzXolqVVQQYV/fP9UdfaLVUBLqmvVUvVQoCqgICrVV5xiyOgIkFZ7rDTRKDUFQCdEvyMq7UColBVxChP2UCgJmUyQ6EUIUM//tSxAUAC107P0ewYQFbnt3Aww4IiSJKn+9pc9sBAVIKArG4a6hQETSDNw8KJNVDCj2bWSk3wM12+dU1BAR9X8oezVmaGpBj2MqoYCbOkpfswE4mNSoCJ////z6RrLAI+GFOhJ/UBUdA+BqHRDJg/CCPJwvWL1BaEkciEV1j5hZh5QEfGltUVlllQz/NZZLP+yH/2Wyofy0pl/53+y2WOMKWQyMmCggdBAwTjAyKN1MdBYXDP//LC5n/FiQ9TEFNRTMuOTdVVVVVVVVVVVVVVVX/+1LECgPAAAGkAAAAIAAANIAAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==");
+                    const len = binaryString.length;
+                    const bytes = new Uint8Array(len);
+                    for (let i = 0; i < len; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    actx.decodeAudioData(bytes.buffer.slice(0), (buffer) => {
+                        tickAudioBuffer = buffer;
+                    }, () => {});
+                } catch(e) {}
+            }
+
+            const SoundEngine = {
+                playTick(velocity = 1) {
+                    if (!state.soundEnabled || !state.soundTicks) return;
+
+                    const now = performance.now();
+                    // Audio rate limiter: at most ~28 ticks per second (min 35ms interval)
+                    // Prevents audio tearing, digital clipping, stutter and distortion when there are many items/sectors
+                    if (now - lastAudioTickTime < 35) return;
+                    lastAudioTickTime = now;
+
+                    try {
+                        const actx = getAudioContext();
+
+                        // Clean micro-fade of previous tick to prevent waveform superposition/tearing
+                        if (currentTickGain) {
+                            try {
+                                currentTickGain.gain.cancelScheduledValues(actx.currentTime);
+                                currentTickGain.gain.setValueAtTime(currentTickGain.gain.value, actx.currentTime);
+                                currentTickGain.gain.linearRampToValueAtTime(0.0001, actx.currentTime + 0.003);
+                            } catch(e) {}
+                        }
+
+                        if (tickAudioBuffer) {
+                            const source = actx.createBufferSource();
+                            source.buffer = tickAudioBuffer;
+                            const gainNode = actx.createGain();
+
+                            const vol = state.soundVolume * Math.min(0.8, 0.35 + 0.45 * velocity);
+                            gainNode.gain.setValueAtTime(vol, actx.currentTime);
+                            gainNode.gain.setValueAtTime(vol, actx.currentTime + 0.035);
+                            gainNode.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.07);
+
+                            // Subtle mechanical pitch variation: higher pitch at speed, deeper clack when slowing down
+                            source.playbackRate.value = 0.94 + Math.min(0.24, velocity * 0.2);
+
+                            source.connect(gainNode);
+                            gainNode.connect(masterCompressor || actx.destination);
+
+                            source.start(0);
+                            currentTickGain = gainNode;
+                            return;
+                        }
+                    } catch(e) {}
+
+                    // Fallback procedural click
+                    try {
+                        const actx = getAudioContext();
+                        const osc = actx.createOscillator();
+                        const gain = actx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(520 + velocity * 120, actx.currentTime);
+                        const vol = state.soundVolume * Math.min(0.65, 0.25 + 0.4 * velocity);
+                        gain.gain.setValueAtTime(vol, actx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.03);
+                        osc.connect(gain);
+                        gain.connect(masterCompressor || actx.destination);
+                        osc.start();
+                        osc.stop(actx.currentTime + 0.03);
+                    } catch(e) {}
+                },
+
+                playFanfare() {
+                    if (!state.soundEnabled || !state.soundFanfare) return;
+                    try {
+                        const actx = getAudioContext();
+                        const notes = [523.25, 659.25, 783.99, 1046.50];
+                        notes.forEach((freq, i) => {
+                            const osc = actx.createOscillator();
+                            const gain = actx.createGain();
+                            osc.type = 'triangle';
+                            osc.frequency.setValueAtTime(freq, actx.currentTime + i * 0.09);
+                            gain.gain.setValueAtTime(0, actx.currentTime + i * 0.09);
+                            gain.gain.linearRampToValueAtTime(state.soundVolume * 0.25, actx.currentTime + i * 0.09 + 0.02);
+                            gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + i * 0.09 + 0.45);
+                            osc.connect(gain);
+                            gain.connect(actx.destination);
+                            osc.start(actx.currentTime + i * 0.09);
+                            osc.stop(actx.currentTime + i * 0.09 + 0.45);
+                        });
+                    } catch(e) {}
+                }
+            };
+
+            // --- Confetti Engine ---
+            const confettiCanvas = document.getElementById('confetti-canvas');
+            const cctx = confettiCanvas ? confettiCanvas.getContext('2d') : null;
+            let confettiParticles = [];
+            let confettiAnimationId = null;
+
+            function resizeConfetti() {
+                if (!confettiCanvas) return;
+                confettiCanvas.width = window.innerWidth;
+                confettiCanvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resizeConfetti);
+            resizeConfetti();
+
+            function triggerConfetti() {
+                if (!state.confettiEnabled || !confettiCanvas || !cctx) return;
+                confettiParticles = [];
+                const colors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ffffff'];
+                const count = 140;
+
+                for (let i = 0; i < count; i++) {
+                    confettiParticles.push({
+                        x: window.innerWidth / 2 + (Math.random() - 0.5) * 100,
+                        y: window.innerHeight / 2 - 50,
+                        w: Math.random() * 10 + 6,
+                        h: Math.random() * 6 + 4,
+                        vx: (Math.random() - 0.5) * 22,
+                        vy: (Math.random() - 0.9) * 24,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        rotation: Math.random() * 360,
+                        vRot: (Math.random() - 0.5) * 16,
+                        opacity: 1,
+                        decay: Math.random() * 0.008 + 0.006
+                    });
+                }
+
+                if (!confettiAnimationId) {
+                    animateConfetti();
+                }
+            }
+
+            function animateConfetti() {
+                if (!cctx || !confettiCanvas) return;
+                cctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+                confettiParticles.forEach((p) => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.42; // Gravity
+                    p.vx *= 0.98; // Air drag
+                    p.rotation += p.vRot;
+                    p.opacity -= p.decay;
+
+                    if (p.opacity > 0) {
+                        cctx.save();
+                        cctx.translate(p.x, p.y);
+                        cctx.rotate((p.rotation * Math.PI) / 180);
+                        cctx.globalAlpha = Math.max(0, p.opacity);
+                        cctx.fillStyle = p.color;
+                        cctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                        cctx.restore();
+                    }
+                });
+
+                confettiParticles = confettiParticles.filter(p => p.opacity > 0 && p.y < window.innerHeight + 50);
+
+                if (confettiParticles.length > 0) {
+                    confettiAnimationId = requestAnimationFrame(animateConfetti);
+                } else {
+                    confettiAnimationId = null;
+                    cctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+                }
+            }
+
+            // --- Contrast Color Calculator ---
+            function getContrastColor(hexColor) {
+                if (!hexColor) return '#ffffff';
+                let color = hexColor.replace('#', '');
+                if (color.length === 3) {
+                    color = color.split('').map(c => c + c).join('');
+                }
+                const r = parseInt(color.substr(0, 2), 16) || 0;
+                const g = parseInt(color.substr(2, 2), 16) || 0;
+                const b = parseInt(color.substr(4, 2), 16) || 0;
+                const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+                return (yiq >= 150) ? '#0f172a' : '#ffffff';
+            }
+
+            function parseItems() {
+                const text = prizeInput.value;
+                const lines = text.split('\n');
+                state.items = lines.map(line => {
+                    const trimmed = line.trim();
+                    const isInactive = trimmed.endsWith('.');
+                    const cleanText = isInactive ? trimmed.slice(0, -1).trim() : trimmed;
+                    return {
+                        raw: line,
+                        text: cleanText,
+                        active: !isInactive && cleanText.length > 0
+                    };
+                }).filter(item => item.text.length > 0);
+
+                state.activeItems = state.items.filter(item => item.active);
+
+                statActive.textContent = state.activeItems.length;
+                statTotal.textContent = state.items.length;
+                btnSpin.disabled = state.activeItems.length === 0 || state.isSpinning;
+            }
+
+            // --- Canvas Wheel Rendering ---
+            function setupCanvasResolution() {
+                const rect = canvas.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                ctx.scale(dpr, dpr);
+            }
+
+            function drawWheel() {
+                const rect = canvas.getBoundingClientRect();
+                const size = rect.width;
+                const centerX = size / 2;
+                const centerY = size / 2;
+                const radius = size / 2 - 8;
+
+                ctx.clearRect(0, 0, size, size);
+
+                const items = state.activeItems;
+                const numSectors = items.length;
+
+                if (numSectors === 0) {
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                    ctx.fillStyle = state.theme === 'dark' ? '#1e293b' : '#e2e8f0';
+                    ctx.fill();
+                    ctx.strokeStyle = state.theme === 'dark' ? '#334155' : '#cbd5e1';
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
+
+                    ctx.fillStyle = state.theme === 'dark' ? '#94a3b8' : '#64748b';
+                    ctx.font = '600 15px ' + getComputedStyle(document.body).fontFamily;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('Добавьте варианты в список', centerX, centerY);
+                    return;
+                }
+
+                const sectorAngle = (2 * Math.PI) / numSectors;
+                const currentPalette = PALETTES[state.palette] || PALETTES.modern;
+
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(state.currentAngle);
+
+                // Draw each slice
+                for (let i = 0; i < numSectors; i++) {
+                    const startAngle = i * sectorAngle;
+                    const endAngle = startAngle + sectorAngle;
+                    const color = currentPalette[i % currentPalette.length];
+
+                    // Sector Arc
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.arc(0, 0, radius, startAngle, endAngle);
+                    ctx.closePath();
+                    ctx.fillStyle = color;
+                    ctx.fill();
+
+                    // Subtle slice divider line
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+
+                    // Slice Text Rendering
+                    ctx.save();
+                    const textAngle = startAngle + sectorAngle / 2;
+                    ctx.rotate(textAngle);
+                    ctx.textAlign = 'right';
+                    ctx.textBaseline = 'middle';
+
+                    const textColor = getContrastColor(color);
+                    ctx.fillStyle = textColor;
+
+                    // Dynamic font scaling
+                    const maxFontSize = Math.min(22, Math.max(11, Math.floor(180 / Math.sqrt(numSectors))));
+                    ctx.font = '700 ' + maxFontSize + 'px ' + getComputedStyle(document.body).fontFamily;
+
+                    // Text truncation to avoid overlapping center
+                    const maxTextLength = radius * 0.70;
+                    let displayText = items[i].text;
+                    if (ctx.measureText(displayText).width > maxTextLength) {
+                        while (displayText.length > 3 && ctx.measureText(displayText + '…').width > maxTextLength) {
+                            displayText = displayText.slice(0, -1);
+                        }
+                        displayText += '…';
+                    }
+
+                    ctx.shadowColor = textColor === '#ffffff' ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.6)';
+                    ctx.shadowBlur = 4;
+                    ctx.fillText(displayText, radius - 24, 0);
+                    ctx.restore();
+                }
+
+                // Outer Ring with Bevel & Decorative Pegs / Studs
+                ctx.beginPath();
+                ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+                ctx.strokeStyle = state.theme === 'dark' ? '#334155' : '#cbd5e1';
+                ctx.lineWidth = 6;
+                ctx.stroke();
+
+                // Pins around rim
+                for (let i = 0; i < numSectors; i++) {
+                    const pinAngle = i * sectorAngle;
+                    const pinX = (radius - 3) * Math.cos(pinAngle);
+                    const pinY = (radius - 3) * Math.sin(pinAngle);
+
+                    ctx.beginPath();
+                    ctx.arc(pinX, pinY, 4, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                    ctx.shadowBlur = 3;
+                    ctx.fill();
+                }
+
+                ctx.restore();
+            }
+
+            function update() {
+                parseItems();
+                setupCanvasResolution();
+                drawWheel();
+            }
+
+            // --- Ambient Idle Smooth Rotation ---
+            let idleAnimationId = null;
+            let lastIdleTimestamp = null;
+
+            function idleLoop(timestamp) {
+                if (!lastIdleTimestamp) lastIdleTimestamp = timestamp;
+                const dt = Math.min((timestamp - lastIdleTimestamp) / 1000, 0.1);
+                lastIdleTimestamp = timestamp;
+
+                if (!state.isSpinning && !state.isIdlePaused && state.activeItems.length > 0) {
+                    // Smooth, slow, hypnotic ambient rotation
+                    state.currentAngle = ((state.currentAngle + state.idleSpeed * dt) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+                    drawWheel();
+                }
+
+                idleAnimationId = requestAnimationFrame(idleLoop);
+            }
+
+            function startIdleAnimation() {
+                if (!idleAnimationId) {
+                    lastIdleTimestamp = performance.now();
+                    idleAnimationId = requestAnimationFrame(idleLoop);
+                }
+            }
+
+            function stopIdleAnimation() {
+                if (idleAnimationId) {
+                    cancelAnimationFrame(idleAnimationId);
+                    idleAnimationId = null;
+                }
+            }
+
+            // --- Physical Ticker Bounce with Debounce ---
+            let tickerTimeout = null;
+            function deflectTicker(angle = -16) {
+                tickerPointer.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+                if (tickerTimeout) clearTimeout(tickerTimeout);
+                tickerTimeout = setTimeout(() => {
+                    tickerPointer.style.transform = 'translateX(-50%) rotate(0deg)';
+                    tickerTimeout = null;
+                }, 42);
+            }
+
+            // --- Realistic Physical Wheel Curve with Smooth Launch & Natural Inertial Deceleration ---
+            function smoothPhysicalWheel(p) {
+                if (p <= 0) return 0;
+                if (p >= 1) return 1;
+
+                // Stage 1: Initial impulse / flick (smooth acceleration from 0 up to peak speed, first 7% of time)
+                const t0 = 0.07;
+                if (p < t0) {
+                    const a = 2.15 / t0;
+                    return 0.5 * a * p * p;
+                }
+
+                // Stage 2: Pure physical deceleration (smooth continuous rolling with real inertia)
+                const s0 = 0.5 * 2.15 * t0; // Position at end of launch (~0.075)
+                const remTime = 1 - t0;
+                const u = (1 - p) / remTime;
+                return 1 - (1 - s0) * Math.pow(u, 2.2);
+            }
+
+            // --- Firebase Realtime Database & Venus Admin System ---
+            const firebaseConfig = {
+                apiKey: "AIzaSyBTcH3_tri2L7AHLh1e-YD-0s-QSthuE6Q",
+                authDomain: "disk-c98ee.firebaseapp.com",
+                databaseURL: "https://disk-c98ee-default-rtdb.firebaseio.com",
+                projectId: "disk-c98ee",
+                storageBucket: "disk-c98ee.firebasestorage.app",
+                messagingSenderId: "59577059636",
+                appId: "1:59577059636:web:e98f456d054cc360747d61"
+            };
+
+            const adminState = {
+                isLoggedIn: localStorage.getItem('venus_admin_logged') === 'true',
+                forcedWinner: null,
+                bannedItems: []
+            };
+            window.adminState = adminState;
+
+            // Load saved admin settings from local cache
+            try {
+                const cached = localStorage.getItem('venus_admin_state');
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (parsed.forcedWinner !== undefined) adminState.forcedWinner = parsed.forcedWinner;
+                    if (Array.isArray(parsed.bannedItems)) adminState.bannedItems = parsed.bannedItems;
+                }
+            } catch(e) {}
+
+            let firebaseDb = null;
+            function initFirebase() {
+                try {
+                    if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+                        const app = firebase.initializeApp(firebaseConfig);
+                        firebaseDb = firebase.database();
+
+                        // Listen for real-time remote updates
+                        firebaseDb.ref('wheel_control').on('value', (snapshot) => {
+                            const val = snapshot.val();
+                            if (val) {
+                                if (val.forcedWinner !== undefined) adminState.forcedWinner = val.forcedWinner;
+                                if (Array.isArray(val.bannedItems)) adminState.bannedItems = val.bannedItems;
+                                renderAdminPanel();
+                            }
+                        });
+                    }
+                } catch(err) {
+                    console.warn('Firebase notice:', err);
+                }
+            }
+
+            function syncAdminToFirebase() {
+                try {
+                    localStorage.setItem('venus_admin_state', JSON.stringify({
+                        forcedWinner: adminState.forcedWinner,
+                        bannedItems: adminState.bannedItems
+                    }));
+                    if (firebaseDb) {
+                        firebaseDb.ref('wheel_control').set({
+                            forcedWinner: adminState.forcedWinner,
+                            bannedItems: adminState.bannedItems,
+                            updatedAt: Date.now()
+                        }).catch(e => console.warn('Sync notice:', e));
+                    }
+                } catch(e) {}
+                renderAdminPanel();
+            }
+
+            // --- Wheel Spin Logic with Venus Rigging ---
+            function spinWheel() {
+                if (state.isSpinning || state.activeItems.length === 0) return;
+
+                getAudioContext();
+                initTickAudio();
+
+                state.isSpinning = true;
+                btnSpin.disabled = true;
+                closeWinnerModal();
+
+                const numSectors = state.activeItems.length;
+                const sectorAngle = (2 * Math.PI) / numSectors;
+
+                // --- Venus Rigged Selection Logic ---
+                const isBanned = (text) => {
+                    return adminState.bannedItems.some(b => b.trim().toLowerCase() === text.trim().toLowerCase());
+                };
+
+                const eligibleIndices = [];
+                state.activeItems.forEach((item, idx) => {
+                    if (!isBanned(item.text)) {
+                        eligibleIndices.push(idx);
+                    }
+                });
+
+                let winningIndex = -1;
+
+                // 1. Check if a winner is forced for this spin
+                if (adminState.forcedWinner) {
+                    const forcedTarget = adminState.forcedWinner.trim().toLowerCase();
+                    const forcedIdx = state.activeItems.findIndex(item => item.text.trim().toLowerCase() === forcedTarget);
+                    if (forcedIdx !== -1) {
+                        winningIndex = forcedIdx;
+                        // Single-use forced winner: consume and clear
+                        adminState.forcedWinner = null;
+                        syncAdminToFirebase();
+                    }
+                }
+
+                // 2. Pick from eligible non-banned
+                if (winningIndex === -1) {
+                    if (eligibleIndices.length > 0) {
+                        winningIndex = eligibleIndices[Math.floor(Math.random() * eligibleIndices.length)];
+                    } else {
+                        winningIndex = Math.floor(Math.random() * numSectors);
+                    }
+                }
+
+                const winnerItem = state.activeItems[winningIndex];
+                state.lastWinner = winnerItem;
+
+                // Pointer angle is top: -PI/2
+                const pointerAngle = -Math.PI / 2;
+
+                // Safe landing comfortably inside the sector
+                const safePadding = sectorAngle * 0.16;
+                const randomOffset = safePadding + Math.random() * (sectorAngle - 2 * safePadding);
+                const targetSliceAngle = (winningIndex * sectorAngle) + randomOffset;
+
+                // 6 to 9 full spins
+                const fullRotations = (6 + Math.floor(Math.random() * 3)) * (2 * Math.PI);
+                const currentNorm = (state.currentAngle % (2 * Math.PI) + (2 * Math.PI)) % (2 * Math.PI);
+                
+                // Final target angle
+                let endAngle = state.currentAngle + fullRotations + (pointerAngle - targetSliceAngle - currentNorm);
+                while (endAngle <= state.currentAngle + (5 * 2 * Math.PI)) {
+                    endAngle += 2 * Math.PI;
+                }
+
+                const startAngle = state.currentAngle;
+                const totalDelta = endAngle - startAngle;
+                const duration = state.spinDuration; // Clean, standard duration
+
+                let startTime = null;
+                let lastPassedPin = -1;
+                let lastVisualTickTime = 0;
+
+                function step(timestamp) {
+                    if (!startTime) startTime = timestamp;
+                    const elapsed = timestamp - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+
+                    // Realistic physical deceleration with natural momentum
+                    const ease = smoothPhysicalWheel(progress);
+                    state.currentAngle = startAngle + totalDelta * ease;
+
+                    // Pin crossing tracking for ticker sound and deflection
+                    const currentAngleNorm = (state.currentAngle % (2 * Math.PI) + (2 * Math.PI)) % (2 * Math.PI);
+                    const relativeToPointer = (pointerAngle - currentAngleNorm + 4 * Math.PI) % (2 * Math.PI);
+                    const currentPin = Math.floor(relativeToPointer / sectorAngle);
+
+                    if (currentPin !== lastPassedPin) {
+                        lastPassedPin = currentPin;
+                        const now = performance.now();
+                        // Rate-limit tick sounds & deflection (max ~28/sec) to avoid audio tearing when there are many items/sectors
+                        if (now - lastVisualTickTime >= 35) {
+                            lastVisualTickTime = now;
+                            const velFraction = Math.max(0.15, 1 - progress);
+                            SoundEngine.playTick(velFraction);
+                            const deflectAmount = Math.max(6, 16 * velFraction);
+                            deflectTicker(-deflectAmount);
+                        }
+                    }
+
+                    drawWheel();
+
+                    if (progress < 1) {
+                        requestAnimationFrame(step);
+                    } else {
+                        onSpinFinished(winnerItem);
+                    }
+                }
+
+                requestAnimationFrame(step);
+            }
+
+            function onSpinFinished(winner) {
+                state.isSpinning = false;
+                state.isIdlePaused = true;
+                btnSpin.disabled = false;
+                state.currentAngle = ((state.currentAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+
+                // Play Fanfare & Confetti
+                try {
+                    SoundEngine.playFanfare();
+                } catch(e) {
+                    console.error('Fanfare sound error:', e);
+                }
+
+                try {
+                    triggerConfetti();
+                } catch(e) {
+                    console.error('Confetti animation error:', e);
+                }
+
+                // Add to History
+                try {
+                    addToHistory(winner.text);
+                } catch(e) {
+                    console.error('History update error:', e);
+                }
+
+                // Auto-remove if configured
+                if (state.autoRemoveWinner) {
+                    try {
+                        excludeItem(winner.text, false);
+                    } catch(e) {}
+                }
+
+                // Show Celebration Modal
+                showWinnerModal(winner.text);
+            }
+
+            // --- History Management ---
+            function addToHistory(name) {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                state.history.unshift({ name, time: timeStr });
+
+                renderHistory();
+            }
+
+            function renderHistory() {
+                if (state.history.length === 0) {
+                    historyList.innerHTML = '<div class="empty-history">История пока пуста. Крутите колесо!</div>';
+                    return;
+                }
+
+                historyList.innerHTML = state.history.map(item => `
+                    <div class="history-item">
+                        <span class="winner-name" title="${item.name}">${item.name}</span>
+                        <span class="winner-time">${item.time}</span>
+                    </div>
+                `).join('');
+            }
+
+            // --- Exclude / Remove Item from List ---
+            function excludeItem(itemText, updateUi = true) {
+                const lines = prizeInput.value.split('\n');
+                let found = false;
+
+                const newLines = lines.map(line => {
+                    const trimmed = line.trim();
+                    const clean = trimmed.endsWith('.') ? trimmed.slice(0, -1).trim() : trimmed;
+                    if (!found && clean.toLowerCase() === itemText.toLowerCase() && !trimmed.endsWith('.')) {
+                        found = true;
+                        return line + '.';
+                    }
+                    return line;
+                });
+
+                prizeInput.value = newLines.join('\n');
+                if (updateUi) {
+                    update();
+                }
+            }
+
+            // --- Winner Modal with 5s Auto-Close & Last Winner Widget ---
+            let winnerAutoCloseTimer = null;
+            let winnerProgressInterval = null;
+
+            function updateLastWinnerWidget(winnerName, timeStr) {
+                const widget = document.getElementById('last-winner-widget');
+                const widgetName = document.getElementById('widget-last-name');
+                const widgetTime = document.getElementById('widget-last-time');
+                if (widgetName) widgetName.textContent = winnerName;
+                if (widgetTime) widgetTime.textContent = timeStr || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                if (widget) {
+                    widget.style.borderColor = 'var(--accent-primary)';
+                    setTimeout(() => { widget.style.borderColor = 'var(--bg-card-border)'; }, 1500);
+                }
+            }
+
+            function showWinnerModal(winnerName) {
+                state.isIdlePaused = true;
+                modalWinnerName.textContent = winnerName;
+                winnerModal.classList.add('show');
+
+                const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                updateLastWinnerWidget(winnerName, nowTime);
+
+                // Start 5-second auto-close countdown
+                clearAutoCloseTimers();
+
+                const autoBar = document.getElementById('winner-autoclose-bar');
+                const autoText = document.getElementById('winner-autoclose-text');
+                if (autoBar) autoBar.style.width = '100%';
+
+                const duration = 5000;
+                const startTime = Date.now();
+
+                winnerProgressInterval = setInterval(() => {
+                    const elapsed = Date.now() - startTime;
+                    const remaining = Math.max(0, duration - elapsed);
+                    const pct = (remaining / duration) * 100;
+                    if (autoBar) autoBar.style.width = pct + '%';
+                    const sec = Math.ceil(remaining / 1000);
+                    if (autoText) autoText.textContent = 'Закроется через ' + sec + ' сек...';
+
+                    if (remaining <= 0) {
+                        clearAutoCloseTimers();
+                        closeWinnerModal();
+                    }
+                }, 40);
+
+                winnerAutoCloseTimer = setTimeout(() => {
+                    closeWinnerModal();
+                }, duration);
+            }
+
+            function clearAutoCloseTimers() {
+                if (winnerAutoCloseTimer) {
+                    clearTimeout(winnerAutoCloseTimer);
+                    winnerAutoCloseTimer = null;
+                }
+                if (winnerProgressInterval) {
+                    clearInterval(winnerProgressInterval);
+                    winnerProgressInterval = null;
+                }
+            }
+
+            function closeWinnerModal() {
+                clearAutoCloseTimers();
+                winnerModal.classList.remove('show');
+                state.isIdlePaused = false;
+                lastIdleTimestamp = performance.now();
+            }
+
+            // Click on bottom-right widget to re-view winner
+            const lastWinnerWidget = document.getElementById('last-winner-widget');
+            if (lastWinnerWidget) {
+                lastWinnerWidget.addEventListener('click', () => {
+                    if (state.lastWinner) {
+                        showWinnerModal(state.lastWinner.text);
+                    }
+                });
+            }
+
+            // --- Hotkeys Modal ---
+            function openHotkeysModal() {
+                hotkeysModal.classList.add('show');
+            }
+
+            function closeHotkeysModal() {
+                hotkeysModal.classList.remove('show');
+            }
+
+            // --- Event Listeners ---
+            btnSpin.addEventListener('click', spinWheel);
+            centerHub.addEventListener('click', spinWheel);
+            canvas.addEventListener('click', spinWheel);
+
+            btnShuffle.addEventListener('click', () => {
+                if (state.isSpinning) return;
+                const lines = prizeInput.value.split('\n').filter(l => l.trim().length > 0);
+                for (let i = lines.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [lines[i], lines[j]] = [lines[j], lines[i]];
+                }
+                prizeInput.value = lines.join('\n');
+                update();
+            });
+
+            prizeInput.addEventListener('input', update);
+
+            // --- Modal Action Buttons ---
+            modalCloseBtn.addEventListener('click', closeWinnerModal);
+            winnerModal.addEventListener('click', (e) => {
+                if (e.target === winnerModal) closeWinnerModal();
+            });
+
+            // "Убрать из списка" Button
+            modalBtnExclude.addEventListener('click', () => {
+                if (state.lastWinner) {
+                    excludeItem(state.lastWinner.text, true);
+                    closeWinnerModal();
+                }
+            });
+
+            // "Ещё раз" Button
+            modalBtnSpinAgain.addEventListener('click', () => {
+                closeWinnerModal();
+                setTimeout(spinWheel, 200);
+            });
+
+            // "Скопировать название" Button with fallback
+            modalBtnCopy.addEventListener('click', () => {
+                if (state.lastWinner) {
+                    const text = state.lastWinner.text;
+                    const showSuccess = () => {
+                        const originalHtml = modalBtnCopy.innerHTML;
+                        modalBtnCopy.innerHTML = '<span>✅ Скопировано!</span>';
+                        setTimeout(() => { modalBtnCopy.innerHTML = originalHtml; }, 1500);
+                    };
+
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(text).then(showSuccess).catch(() => {
+                            fallbackCopy(text);
+                            showSuccess();
+                        });
+                    } else {
+                        fallbackCopy(text);
+                        showSuccess();
+                    }
+                }
+            });
+
+            function fallbackCopy(text) {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch(e) {}
+                document.body.removeChild(ta);
+            }
+
+            // --- Hotkeys Modal Listeners ---
+            btnOpenHotkeys.addEventListener('click', openHotkeysModal);
+            hotkeysCloseBtn.addEventListener('click', closeHotkeysModal);
+            hotkeysGotIt.addEventListener('click', closeHotkeysModal);
+            hotkeysModal.addEventListener('click', (e) => {
+                if (e.target === hotkeysModal) closeHotkeysModal();
+            });
+
+            // --- Presets: Yes/No and 1-21 ---
+            document.querySelectorAll('.preset-pill').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const preset = btn.dataset.preset;
+                    if (preset === 'yesno') {
+                        prizeInput.value = 'Да\nНет\nВозможно';
+                    } else if (preset === 'numbers21') {
+                        prizeInput.value = Array.from({ length: 21 }, (_, i) => String(i + 1)).join('\n');
+                    }
+                    update();
+                });
+            });
+
+            // Editor Tools
+            btnSortAz.addEventListener('click', () => {
+                const lines = prizeInput.value.split('\n').filter(l => l.trim().length > 0);
+                lines.sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }));
+                prizeInput.value = lines.join('\n');
+                update();
+            });
+
+            btnClearList.addEventListener('click', () => {
+                if (confirm('Очистить весь список вариантов?')) {
+                    prizeInput.value = '';
+                    update();
+                }
+            });
+
+            btnClearHistory.addEventListener('click', () => {
+                state.history = [];
+                renderHistory();
+            });
+
+            // Settings Bindings
+            settingDuration.addEventListener('input', (e) => {
+                const sec = parseInt(e.target.value);
+                state.spinDuration = sec * 1000;
+                spinDurationVal.textContent = sec + ' сек';
+            });
+
+            settingPalette.addEventListener('change', (e) => {
+                state.palette = e.target.value;
+                drawWheel();
+            });
+
+            settingSoundTicks.addEventListener('change', (e) => {
+                state.soundTicks = e.target.checked;
+            });
+
+            settingSoundFanfare.addEventListener('change', (e) => {
+                state.soundFanfare = e.target.checked;
+            });
+
+            settingAutoRemove.addEventListener('change', (e) => {
+                state.autoRemoveWinner = e.target.checked;
+            });
+
+            settingConfetti.addEventListener('change', (e) => {
+                state.confettiEnabled = e.target.checked;
+            });
+
+            settingVolume.addEventListener('input', (e) => {
+                const vol = parseInt(e.target.value);
+                state.soundVolume = vol / 100;
+                soundVolVal.textContent = vol + '%';
+            });
+
+            // Tabs Switching
+            document.querySelectorAll('.tab-btn').forEach(tabBtn => {
+                tabBtn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    tabBtn.classList.add('active');
+                    const targetTab = document.getElementById(tabBtn.dataset.tab);
+                    if (targetTab) targetTab.classList.add('active');
+                });
+            });
+
+            // Navigation Actions: Sound, Theme, Fullscreen
+            btnSoundToggle.addEventListener('click', () => {
+                state.soundEnabled = !state.soundEnabled;
+                iconSoundOn.style.display = state.soundEnabled ? 'block' : 'none';
+                iconSoundOff.style.display = state.soundEnabled ? 'none' : 'block';
+            });
+
+            btnThemeToggle.addEventListener('click', () => {
+                state.theme = state.theme === 'dark' ? 'light' : 'dark';
+                document.body.setAttribute('data-theme', state.theme);
+                iconThemeDark.style.display = state.theme === 'dark' ? 'block' : 'none';
+                iconThemeLight.style.display = state.theme === 'light' ? 'block' : 'none';
+                drawWheel();
+            });
+
+            btnFullscreen.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                } else {
+                    document.exitFullscreen().catch(() => {});
+                }
+            });
+
+            // Hotkeys Handling
+            document.addEventListener('keydown', (e) => {
+                const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+
+                if (e.code === 'Escape') {
+                    if (winnerModal.classList.contains('show')) {
+                        e.preventDefault();
+                        closeWinnerModal();
+                    } else if (hotkeysModal.classList.contains('show')) {
+                        e.preventDefault();
+                        closeHotkeysModal();
+                    }
+                    return;
+                }
+
+                if (isTyping) {
+                    return; // Do not trigger hotkeys when typing in editor
+                }
+
+                switch (e.code) {
+                    case 'Space':
+                        e.preventDefault();
+                        if (winnerModal.classList.contains('show')) {
+                            closeWinnerModal();
+                            setTimeout(spinWheel, 200);
+                        } else {
+                            spinWheel();
+                        }
+                        break;
+                    case 'KeyS':
+                        e.preventDefault();
+                        if (winnerModal.classList.contains('show') && state.lastWinner) {
+                            excludeItem(state.lastWinner.text, true);
+                            closeWinnerModal();
+                        }
+                        break;
+                    case 'KeyR':
+                        e.preventDefault();
+                        btnShuffle.click();
+                        break;
+                    case 'KeyE':
+                        e.preventDefault();
+                        document.querySelector('[data-tab="tab-items"]').click();
+                        prizeInput.focus();
+                        break;
+                    case 'KeyF':
+                        e.preventDefault();
+                        btnFullscreen.click();
+                        break;
+                    case 'KeyM':
+                        e.preventDefault();
+                        btnSoundToggle.click();
+                        break;
+                    case 'Digit1':
+                        document.querySelector('.intrigue-btn[data-level="normal"]').click();
+                        break;
+                    case 'Digit2':
+                        document.querySelector('.intrigue-btn[data-level="medium"]').click();
+                        break;
+                    case 'Digit3':
+                        document.querySelector('.intrigue-btn[data-level="high"]').click();
+                        break;
+                    case 'Slash':
+                        if (e.shiftKey) { // '?' key
+                            e.preventDefault();
+                            openHotkeysModal();
+                        }
+                        break;
+                    case 'KeyX':
+                        e.preventDefault();
+                        closeWinnerModal();
+                        closeHotkeysModal();
+                        break;
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                setupCanvasResolution();
+                drawWheel();
+            });
+
+            // Initial Launch
+            
+            // --- Triple-Click / Triple-Tap on Top-Left Brand to Open Venus Admin ---
+            let brandClicks = 0;
+            let brandClickTimer = null;
+            let lastBrandTap = 0;
+            const brandTitle = document.getElementById('brand-title');
+
+            function triggerAdminModal() {
+                if (adminState.isLoggedIn) {
+                    openAdminPanel();
+                } else {
+                    openAdminLogin();
+                }
+            }
+
+            function handleBrandTrigger(e) {
+                if (e) {
+                    // Ignore simulated clicks following touchend within 400ms
+                    if (e.type === 'click' && Date.now() - lastBrandTap < 400) {
+                        return;
+                    }
+                    if (e.type === 'touchend') {
+                        lastBrandTap = Date.now();
+                    }
+                    e.preventDefault();
+                }
+
+                brandClicks++;
+                if (brandClickTimer) clearTimeout(brandClickTimer);
+
+                if (brandClicks >= 3) {
+                    brandClicks = 0;
+                    triggerAdminModal();
+                } else {
+                    brandClickTimer = setTimeout(() => {
+                        brandClicks = 0;
+                    }, 2000);
+                }
+            }
+
+            if (brandTitle) {
+                brandTitle.addEventListener('click', handleBrandTrigger);
+                brandTitle.addEventListener('touchend', handleBrandTrigger);
+            }
+
+            // Keyboard shortcut: Alt+A or Ctrl+Shift+A opens Venus Admin
+            window.addEventListener('keydown', (e) => {
+                if ((e.altKey && (e.key === 'a' || e.key === 'ф' || e.code === 'KeyA')) ||
+                    (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a' || e.code === 'KeyA'))) {
+                    e.preventDefault();
+                    triggerAdminModal();
+                }
+            });
+
+            // Admin Modals Elements
+            const adminLoginModal = document.getElementById('admin-login-modal');
+            const adminLoginClose = document.getElementById('admin-login-close');
+            const adminLoginForm = document.getElementById('admin-login-form');
+            const adminLoginUser = document.getElementById('admin-login-user');
+            const adminLoginPass = document.getElementById('admin-login-pass');
+            const adminLoginError = document.getElementById('admin-login-error');
+
+            const adminPanelModal = document.getElementById('admin-panel-modal');
+            const adminPanelClose = document.getElementById('admin-panel-close');
+            const adminPanelDone = document.getElementById('admin-panel-done');
+            const adminLogoutBtn = document.getElementById('admin-logout-btn');
+
+            const adminForceInput = document.getElementById('admin-force-input');
+            const adminForceBtn = document.getElementById('admin-force-btn');
+            const adminClearForceBtn = document.getElementById('admin-clear-force-btn');
+            const adminForceStatusCard = document.getElementById('admin-force-status-card');
+            const adminForceStatusText = document.getElementById('admin-force-status-text');
+            const adminForceIcon = document.getElementById('admin-force-icon');
+            const adminQuickSectors = document.getElementById('admin-quick-sectors');
+
+            const adminBanInput = document.getElementById('admin-ban-input');
+            const adminBanBtn = document.getElementById('admin-ban-btn');
+            const adminBannedTags = document.getElementById('admin-banned-tags');
+
+            function openAdminLogin() {
+                adminLoginUser.value = '';
+                adminLoginPass.value = '';
+                adminLoginError.style.display = 'none';
+                adminLoginModal.classList.add('show');
+                adminLoginUser.focus();
+            }
+
+            function closeAdminLogin() {
+                adminLoginModal.classList.remove('show');
+            }
+
+            if (adminLoginClose) adminLoginClose.addEventListener('click', closeAdminLogin);
+            if (adminLoginModal) {
+                adminLoginModal.addEventListener('click', (e) => {
+                    if (e.target === adminLoginModal) closeAdminLogin();
+                });
+            }
+
+            if (adminLoginForm) {
+                adminLoginForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const u = adminLoginUser.value.trim().toLowerCase();
+                    const p = adminLoginPass.value.trim();
+
+                    if (u === 'venus' && p === '123123') {
+                        adminState.isLoggedIn = true;
+                        localStorage.setItem('venus_admin_logged', 'true');
+                        closeAdminLogin();
+                        openAdminPanel();
+                    } else {
+                        adminLoginError.textContent = 'Неверный логин или пароль!';
+                        adminLoginError.style.display = 'block';
+                    }
+                });
+            }
+
+            function openAdminPanel() {
+                renderAdminPanel();
+                adminPanelModal.classList.add('show');
+            }
+
+            function closeAdminPanel() {
+                adminPanelModal.classList.remove('show');
+            }
+
+            if (adminPanelClose) adminPanelClose.addEventListener('click', closeAdminPanel);
+            if (adminPanelDone) adminPanelDone.addEventListener('click', closeAdminPanel);
+            if (adminPanelModal) {
+                adminPanelModal.addEventListener('click', (e) => {
+                    if (e.target === adminPanelModal) closeAdminPanel();
+                });
+            }
+
+            if (adminLogoutBtn) {
+                adminLogoutBtn.addEventListener('click', () => {
+                    adminState.isLoggedIn = false;
+                    localStorage.removeItem('venus_admin_logged');
+                    closeAdminPanel();
+                });
+            }
+
+            function renderAdminPanel() {
+                // Render forced status
+                if (adminState.forcedWinner) {
+                    adminForceStatusCard.classList.add('active');
+                    adminForceIcon.textContent = '🎯';
+                    adminForceStatusText.innerHTML = 'Зафиксировано: <strong style="color:#f59e0b;">' + adminState.forcedWinner + '</strong> (выпадет 100% при след. кручении)';
+                    adminClearForceBtn.style.display = 'inline-block';
+                } else {
+                    adminForceStatusCard.classList.remove('active');
+                    adminForceIcon.textContent = '⚪';
+                    adminForceStatusText.textContent = 'Подкрутка не установлена (случайный выбор)';
+                    adminClearForceBtn.style.display = 'none';
+                }
+
+                // Render quick active sector pills
+                adminQuickSectors.innerHTML = '';
+                state.activeItems.forEach(item => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'quick-sector-btn';
+                    btn.textContent = item.text;
+                    btn.addEventListener('click', () => {
+                        adminForceInput.value = item.text;
+                    });
+                    adminQuickSectors.appendChild(btn);
+                });
+
+                // Render banned tags
+                adminBannedTags.innerHTML = '';
+                if (adminState.bannedItems.length === 0) {
+                    adminBannedTags.innerHTML = '<span style="font-size:12px; color:var(--text-muted);">Черный список пуст (все секторы могут выпадать)</span>';
+                } else {
+                    adminState.bannedItems.forEach((bannedText, index) => {
+                        const tag = document.createElement('div');
+                        tag.className = 'banned-tag';
+                        tag.innerHTML = '<span>' + bannedText + '</span> <span class="banned-tag-remove" data-index="' + index + '" title="Разрешить сектор">&times;</span>';
+                        tag.querySelector('.banned-tag-remove').addEventListener('click', () => {
+                            adminState.bannedItems.splice(index, 1);
+                            syncAdminToFirebase();
+                        });
+                        adminBannedTags.appendChild(tag);
+                    });
+                }
+            }
+
+            // Force winner button handler
+            if (adminForceBtn) {
+                adminForceBtn.addEventListener('click', () => {
+                    const val = adminForceInput.value.trim();
+                    if (val) {
+                        adminState.forcedWinner = val;
+                        adminForceInput.value = '';
+                        syncAdminToFirebase();
+                    }
+                });
+            }
+
+            if (adminClearForceBtn) {
+                adminClearForceBtn.addEventListener('click', () => {
+                    adminState.forcedWinner = null;
+                    syncAdminToFirebase();
+                });
+            }
+
+            // Ban item button handler
+            if (adminBanBtn) {
+                adminBanBtn.addEventListener('click', () => {
+                    const val = adminBanInput.value.trim();
+                    if (val && !adminState.bannedItems.some(b => b.toLowerCase() === val.toLowerCase())) {
+                        adminState.bannedItems.push(val);
+                        adminBanInput.value = '';
+                        syncAdminToFirebase();
+                    }
+                });
+            }
+
+            // Initialize Firebase at load
+            initFirebase();
+
+            update();
+            startIdleAnimation();
+        });
+    </script>
+
+    <!-- Bottom Right: Last Result Widget -->
+    <div class="last-winner-widget" id="last-winner-widget" title="Кликните, чтобы посмотреть последнее выпадение">
+        <div class="widget-icon">🏆</div>
+        <div class="widget-body">
+            <div class="widget-label">Последнее выпадение</div>
+            <div class="widget-name" id="widget-last-name">Пока ничего не выпадало</div>
+            <div class="widget-time" id="widget-last-time">Крутите колесо!</div>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal (Triggered by 3 clicks on brand) -->
+    <div class="modal-overlay" id="admin-login-modal">
+        <div class="modal-card admin-login-card">
+            <button class="modal-close-icon" id="admin-login-close">&times;</button>
+            <div class="admin-badge">⚡ VENUS CONTROL</div>
+            <h3 class="admin-title">Вход в панель управления</h3>
+            <p class="admin-desc">Введите данные администратора Venus для управления исходами</p>
+
+            <form id="admin-login-form" class="admin-form" onsubmit="return false;">
+                <div class="admin-input-group">
+                    <label>Логин</label>
+                    <input type="text" id="admin-login-user" placeholder="Логин (например, venus)" autocomplete="username" required>
+                </div>
+                <div class="admin-input-group">
+                    <label>Пароль</label>
+                    <input type="password" id="admin-login-pass" placeholder="Пароль" autocomplete="current-password" required>
+                </div>
+                <div class="admin-error-msg" id="admin-login-error">Неверный логин или пароль!</div>
+                <button type="submit" class="modal-btn modal-btn-primary" id="admin-login-submit" style="width:100%; margin-top:10px;">
+                    <span>Войти</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Control Panel Modal -->
+    <div class="modal-overlay" id="admin-panel-modal">
+        <div class="modal-card admin-panel-card">
+            <button class="modal-close-icon" id="admin-panel-close">&times;</button>
+            <div class="admin-panel-header">
+                <div class="admin-header-left">
+                    <span class="admin-chip">⚡ VENUS</span>
+                    <h2>Управление колесом</h2>
+                </div>
+            </div>
+
+            <!-- Block 1: Force next winner -->
+            <div class="admin-section">
+                <div class="section-title">
+                    <span>🎯 Что должно сейчас упасть (след. кручение)</span>
+                </div>
+                <p class="section-hint">Укажите вариант, который выпадет при следующем вращении:</p>
+                <div class="admin-rig-row">
+                    <input type="text" id="admin-force-input" class="admin-text-input" placeholder="Введите название варианта (например, 7 или Кофе)">
+                    <button class="modal-btn modal-btn-primary" id="admin-force-btn" style="flex-shrink:0;">
+                        <span>🎯 Зафиксировать</span>
+                    </button>
+                </div>
+                <div class="quick-sectors-row" id="admin-quick-sectors">
+                    <!-- Dynamic quick buttons -->
+                </div>
+                <div class="rig-status-card" id="admin-force-status-card">
+                    <span class="rig-status-icon" id="admin-force-icon">⚪</span>
+                    <span class="rig-status-text" id="admin-force-status-text">Подкрутка не установлена (случайный выбор)</span>
+                    <button class="btn-clear-rig" id="admin-clear-force-btn" style="display:none;">Сбросить</button>
+                </div>
+            </div>
+
+            <!-- Block 2: Banned items (never win) -->
+            <div class="admin-section">
+                <div class="section-title">
+                    <span>🚫 Что вообще НЕ должно падать (Черный список)</span>
+                </div>
+                <p class="section-hint">Эти варианты крутятся на колесе, но никогда не выпадут в качестве победителя:</p>
+                <div class="admin-rig-row">
+                    <input type="text" id="admin-ban-input" class="admin-text-input" placeholder="Вариант под запрет (например, 1)">
+                    <button class="modal-btn modal-btn-danger" id="admin-ban-btn" style="flex-shrink:0;">
+                        <span>🚫 Запретить сектор</span>
+                    </button>
+                </div>
+                <div class="banned-tags-container" id="admin-banned-tags">
+                    <!-- List of banned tags -->
+                </div>
+            </div>
+
+            <!-- Block 3: Footer actions -->
+            <div class="admin-panel-footer">
+                <button class="modal-btn modal-btn-secondary" id="admin-logout-btn">
+                    <span>Выйти</span>
+                </button>
+                <button class="modal-btn modal-btn-primary" id="admin-panel-done">
+                    <span>Сохранить и закрыть</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
